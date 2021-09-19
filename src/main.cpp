@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <avr/sleep.h>
+#include <avr/wdt.h>
 
 #include "DelayRamp.h"
 
@@ -46,6 +47,7 @@ void setupPeriodicInterruptTimer(){
 }
 
 void setup() {
+  wdt_enable(WDTO_2S);
   Serial.begin(115200);
   Serial.println("\n\rReady player one.\n\r");
   setupPeriodicInterruptTimer();
@@ -65,17 +67,18 @@ ISR(RTC_PIT_vect) {
 
 void idleSleep() {
   Serial.print("Sleeping... ");
+  // Set sleep mode and enable sleep.
   SLPCTRL.CTRLA = SLPCTRL_SMODE_IDLE_gc | SLPCTRL_SEN_bm;
-  int wake = 0;
+
+  // Serial output will wake the cpu so make sure we disable any prints
   do {
     sleep_cpu();
-    wake++;
   } while (SLPCTRL.CTRLA & SLPCTRL_SEN_bm);
-  Serial.print(wake);
   Serial.println(" Awake");
 }
 
 void loop() {
+  wdt_reset();
   auto brightnessRaw = analogRead(brightnessInput);
   delay(1);
   auto colorTempRaw = analogRead(colorTemperatureInput);
