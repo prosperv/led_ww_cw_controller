@@ -20,18 +20,46 @@ const static uint8_t stepSize = 8;
 DelayRamp warmWhiteRamp(stepSize);
 DelayRamp coolWhiteRamp(stepSize);
 
-void setup() {
-  Serial.begin(115200);
-  Serial.println("Ready player one.");
-  
-  analogReference(INTERNAL4V34);
-  
+void setupPeriodicInterruptTimer(){
+  // Select 1024Hz clock for RTC/PIT
+  RTC.CLKSEL = RTC_CLKSEL_INT1K_gc;
+
+  //Enable interrupt
+  RTC.PITINTCTRL = RTC_PI_bm;
+
+  //Enable PIT module
+  // RTC.PITCTRLA |= 0x1;
+
+  // Set period/frequency of interrupt
+  // 0x1 = 4 cycles f=256hz
+  // 0x2 = 8 cycles f=128hz
+  // 0x3 = 16 cycles f=64hz
+  // RTC.PITCTRLA |= RTC_PERIOD_CYC8_gc;
+  RTC.PITCTRLA = RTC_PERIOD_CYC1024_gc | RTC_PITEN_bm;
+
+  // Clear interrupt flag
+  RTC.PITINTFLAGS = 0x1;
 }
 
+void setup() {
+  Serial.begin(115200);
+  Serial.println("\n\rReady player one.\n\r");
+  setupPeriodicInterruptTimer();
+  
+  analogReference(INTERNAL4V34);
+  interrupts();
+}
+  
 bool s = false;
+ISR(RTC_PIT_vect) {
+  digitalWrite(statusLedPin, s);
+  s = !s;
+  RTC.PITINTFLAGS = 0x1;
+}
+
 void loop() {
   auto brightnessRaw = analogRead(brightnessInput);
-  delay(5);
+  delay(1);
   auto colorTempRaw = analogRead(colorTemperatureInput);
   
   Serial.printf("brightnessRaw: %d, colorTempRaw: %d\r\n", brightnessRaw, colorTempRaw);
@@ -52,10 +80,6 @@ void loop() {
 
   analogWrite(warmWhitePwmPin, warmWhiteDelay);
   analogWrite(coolWhitePwmPin, coolWhiteDelay);
-
-  //Blink led
-  digitalWrite(statusLedPin, s);
-  s = !s;
 
   delay(200);
   Serial.println();
