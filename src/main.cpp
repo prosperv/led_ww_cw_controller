@@ -3,6 +3,7 @@
 #include <avr/wdt.h>
 
 #include "DelayRamp.h"
+#include "Hysteresis.h"
 
 // #define DEBUG
 #ifdef DEBUG
@@ -28,6 +29,10 @@ const static uint8_t statusLedPin = PIN_PA6;
 const static uint8_t stepSize = 8;
 DelayRamp warmWhiteRamp(stepSize);
 DelayRamp coolWhiteRamp(stepSize);
+
+const static uint8_t hysteresisThreshold = 5;
+Hysteresis brightnessHystersis(hysteresisThreshold);
+Hysteresis colorTempHystersis(hysteresisThreshold);
 
 void setupPeriodicInterruptTimer(){
   // Select 1024Hz clock for RTC/PIT
@@ -91,11 +96,16 @@ void loop() {
   auto brightnessRaw = analogRead(brightnessInput);
   delay(1);
   auto colorTempRaw = analogRead(colorTemperatureInput);
-  
+
   PRINTF("brightnessRaw: %d, colorTempRaw: %d\r\n", brightnessRaw, colorTempRaw);
 
-  float brightnessNormal = brightnessRaw / 1023.0f;
-  float colorTempNormal = colorTempRaw / 1023.0f;
+  auto brightnessHystersisValue = brightnessHystersis.process(brightnessRaw);
+  auto colorTempHystersisValue = colorTempHystersis.process(colorTempRaw);
+
+  PRINTF("brightnessHystersisValue: %d, colorTempHystersisValue: %d\r\n", brightnessHystersisValue, colorTempHystersisValue);
+
+  float brightnessNormal = brightnessHystersisValue / 1023.0f;
+  float colorTempNormal = colorTempHystersisValue / 1023.0f;
 
   int warmWhiteValue = colorTempNormal * brightnessNormal * 255;
   int coolWhiteValue = (1 - colorTempNormal) * brightnessNormal * 255;
