@@ -16,6 +16,8 @@ const static uint8_t colorTemperatureInput = PIN_PA2;
 const static uint8_t warmWhitePwmPin = PIN_PB0;
 const static uint8_t coolWhitePwmPin = PIN_PB1;
 
+const static uint8_t powerSense = PIN_PA4; // Unused
+
 const static uint8_t statusLedPin = PIN_PA6;
 
 const static uint8_t stepSize = 8;
@@ -56,11 +58,11 @@ void setup() {
   interrupts();
 }
 
-bool s = false;
+bool led = false;
 ISR(RTC_PIT_vect) {
   sleep_disable();
-  digitalWrite(statusLedPin, s);
-  s = !s;
+  digitalWrite(statusLedPin, led);
+  led = !led;
   RTC.PITINTFLAGS = 0x1;
 }
 
