@@ -7,11 +7,13 @@
 
 // #define DEBUG
 #ifdef DEBUG
+#define BEGIN(x) Serial.begin(x)
 #define PRINTLN(x) Serial.println(x)
 #define PRINT(x) Serial.print(x)
 #define PRINTF(...) Serial.printf(__VA_ARGS__)
 
 #else
+#define BEGIN(x)
 #define PRINTLN(...)
 #define PRINT(...)
 #define PRINTF(...)
@@ -63,10 +65,8 @@ void setupPeriodicInterruptTimer(){
 
 void setup() {
   wdt_enable(WDTO_2S);
-  #ifdef DEBUG
-  Serial.begin(115200);
+  BEGIN(115200);
   PRINTLN("\n\rReady player one.\n\r");
-  #endif
   setupPeriodicInterruptTimer(); 
 
   analogReference(INTERNAL4V34);
@@ -83,7 +83,7 @@ ISR(RTC_PIT_vect) {
 
 
 void idleSleep() {
-  Serial.print("Sleeping... ");
+  PRINT("Sleeping... ");
   // Set sleep mode and enable sleep.
   SLPCTRL.CTRLA = SLPCTRL_SMODE_IDLE_gc | SLPCTRL_SEN_bm;
 
@@ -93,6 +93,10 @@ void idleSleep() {
   } while (SLPCTRL.CTRLA & SLPCTRL_SEN_bm);
   PRINTLN(" Awake");
 }
+
+
+int warmWhitePreviousValue = 0;
+int coolWhitePreviousValue = 0;
 
 void loop() {
   wdt_reset();
@@ -121,9 +125,14 @@ void loop() {
   int coolWhiteDelay = coolWhiteRamp.computeValue();
   PRINTF("warmWhiteDelay: %d, coolWhiteDelay: %d\r\n", warmWhiteDelay, coolWhiteDelay);
 
+  if (warmWhiteDelay != warmWhitePreviousValue)
   analogWrite(warmWhitePwmPin, warmWhiteDelay);
+
+  if (coolWhiteDelay != coolWhitePreviousValue)
   analogWrite(coolWhitePwmPin, coolWhiteDelay);
 
+  warmWhitePreviousValue = warmWhiteDelay;
+  coolWhitePreviousValue = coolWhiteDelay;
   idleSleep();
 
   PRINTLN();
