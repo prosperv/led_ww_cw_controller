@@ -21,6 +21,7 @@ public:
             }
             _value = input;
         }
+        return _value;
     }
 
 private:

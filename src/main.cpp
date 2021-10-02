@@ -26,7 +26,7 @@ const static uint8_t powerSense = PIN_PA4; // Unused
 
 const static uint8_t statusLedPin = PIN_PA6;
 
-const static uint8_t stepSize = 8;
+const static uint8_t stepSize = 1;
 DelayRamp warmWhiteRamp(stepSize);
 DelayRamp coolWhiteRamp(stepSize);
 
@@ -42,17 +42,20 @@ void setupPeriodicInterruptTimer(){
   RTC.PITINTCTRL = RTC_PI_bm;
 
   //Enable PIT module
-  // RTC.PITCTRLA |= 0x1;
+  // RTC.PITCTRLA |= RTC_PITEN_bm;
 
-  // Set period/frequency of interrupt
+  // Set period/frequency of interrupt and enable PIT
   // 0x1 = 4 cycles f=256 Hz
   // 0x2 = 8 cycles f=128 Hz
   // 0x3 = 16 cycles f=64 Hz
   // 0x4 = 32 cycles f=32 Hz
-  // 0x4 = 64 cycles f=16 Hz
-  // 0x4 = 128 cycles f=8 Hz
-  // RTC.PITCTRLA |= RTC_PERIOD_CYC8_gc;
-  RTC.PITCTRLA = RTC_PERIOD_CYC512_gc | RTC_PITEN_bm;
+  // 0x5 = 64 cycles f=16 Hz
+  // 0x6 = 128 cycles f=8 Hz
+  #ifdef DEBUG
+  RTC.PITCTRLA |= RTC_PERIOD_CYC128_gc | RTC_PITEN_bm;
+  #else
+  RTC.PITCTRLA = RTC_PERIOD_CYC8_gc | RTC_PITEN_bm;
+  #endif
 
   // Clear interrupt flag
   RTC.PITINTFLAGS = 0x1;
