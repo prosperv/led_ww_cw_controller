@@ -4,12 +4,17 @@
 
 #include "DelayRamp.h"
 
-/* 
-Inputs
-Brightness - analog
-ColorTemp - analog
-*/
+// #define DEBUG
+#ifdef DEBUG
+#define PRINTLN(x) Serial.println(x)
+#define PRINT(x) Serial.print(x)
+#define PRINTF(...) Serial.printf(__VA_ARGS__)
 
+#else
+#define PRINTLN(...)
+#define PRINT(...)
+#define PRINTF(...)
+#endif
 const static uint8_t brightnessInput = PIN_PA1;
 const static uint8_t colorTemperatureInput = PIN_PA2;
 
@@ -50,9 +55,11 @@ void setupPeriodicInterruptTimer(){
 
 void setup() {
   wdt_enable(WDTO_2S);
+  #ifdef DEBUG
   Serial.begin(115200);
-  Serial.println("\n\rReady player one.\n\r");
-  setupPeriodicInterruptTimer();
+  PRINTLN("\n\rReady player one.\n\r");
+  #endif
+  setupPeriodicInterruptTimer(); 
 
   analogReference(INTERNAL4V34);
   interrupts();
@@ -76,7 +83,7 @@ void idleSleep() {
   do {
     sleep_cpu();
   } while (SLPCTRL.CTRLA & SLPCTRL_SEN_bm);
-  Serial.println(" Awake");
+  PRINTLN(" Awake");
 }
 
 void loop() {
@@ -85,26 +92,26 @@ void loop() {
   delay(1);
   auto colorTempRaw = analogRead(colorTemperatureInput);
   
-  Serial.printf("brightnessRaw: %d, colorTempRaw: %d\r\n", brightnessRaw, colorTempRaw);
+  PRINTF("brightnessRaw: %d, colorTempRaw: %d\r\n", brightnessRaw, colorTempRaw);
 
   float brightnessNormal = brightnessRaw / 1023.0f;
   float colorTempNormal = colorTempRaw / 1023.0f;
 
   int warmWhiteValue = colorTempNormal * brightnessNormal * 255;
   int coolWhiteValue = (1 - colorTempNormal) * brightnessNormal * 255;
-  Serial.printf("warmWhiteValue: %d, coolWhiteValue: %d\r\n", warmWhiteValue, coolWhiteValue);
+  PRINTF("warmWhiteValue: %d, coolWhiteValue: %d\r\n", warmWhiteValue, coolWhiteValue);
 
   warmWhiteRamp.setTarget(warmWhiteValue);
   coolWhiteRamp.setTarget(coolWhiteValue);
   
   int warmWhiteDelay = warmWhiteRamp.computeValue();
   int coolWhiteDelay = coolWhiteRamp.computeValue();
-  Serial.printf("warmWhiteDelay: %d, coolWhiteDelay: %d\r\n", warmWhiteDelay, coolWhiteDelay);
+  PRINTF("warmWhiteDelay: %d, coolWhiteDelay: %d\r\n", warmWhiteDelay, coolWhiteDelay);
 
   analogWrite(warmWhitePwmPin, warmWhiteDelay);
   analogWrite(coolWhitePwmPin, coolWhiteDelay);
 
   idleSleep();
 
-  Serial.println();
+  PRINTLN();
 }
