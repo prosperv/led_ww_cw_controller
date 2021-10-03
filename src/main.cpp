@@ -94,6 +94,18 @@ void idleSleep() {
   PRINTLN(" Awake");
 }
 
+void pwmWrite(const uint8_t& pin, int val)
+{
+  if (val <= 0)
+  {
+    val = 0;
+  }
+  else if (val >= 255) {
+    val = 255;
+  }
+
+  analogWrite(pin, val);
+}
 
 int warmWhitePreviousValue = 0;
 int coolWhitePreviousValue = 0;
@@ -126,10 +138,10 @@ void loop() {
   PRINTF("warmWhiteDelay: %d, coolWhiteDelay: %d\r\n", warmWhiteDelay, coolWhiteDelay);
 
   if (warmWhiteDelay != warmWhitePreviousValue)
-  analogWrite(warmWhitePwmPin, warmWhiteDelay);
+  pwmWrite(warmWhitePwmPin, warmWhiteDelay);
 
   if (coolWhiteDelay != coolWhitePreviousValue)
-  analogWrite(coolWhitePwmPin, coolWhiteDelay);
+  pwmWrite(coolWhitePwmPin, coolWhiteDelay);
 
   warmWhitePreviousValue = warmWhiteDelay;
   coolWhitePreviousValue = coolWhiteDelay;
