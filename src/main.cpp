@@ -123,7 +123,7 @@ void loop() {
 
   PRINTF("brightnessHystersisValue: %d, colorTempHystersisValue: %d\r\n", brightnessHystersisValue, colorTempHystersisValue);
 
-  float brightnessNormal = brightnessHystersisValue / 1023.0f;
+  float brightnessNormal = brightnessHystersisValue / 1023.0f * 1.1f;
   float colorTempNormal = colorTempHystersisValue / 1023.0f;
 
   int warmWhiteValue = colorTempNormal * brightnessNormal * 255;
